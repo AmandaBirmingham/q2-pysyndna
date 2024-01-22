@@ -8,7 +8,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     packages=find_packages(),
     package_data={
-        'q2_pysyndna': ['citations.bib']
+        init.__package_name__: [init.__citations_fname__]
     },
     author=init.__author__,
     author_email=init.__email__,
@@ -17,6 +17,6 @@ setup(
     url=init.__url__,
     entry_points={
         'qiime2.plugins':
-        ['q2-pysyndna=q2_pysyndna.plugin_setup:plugin']
+        [f'{init.__name__}={init.__package_name__}.plugin_setup:plugin']
     },
 )

@@ -1,66 +1,50 @@
-from pysyndna.src.fit_syndna_models import SYNDNA_INDIV_NG_UL_KEY, \
-    REGRESSION_KEYS
-from qiime2.plugin import SemanticType
+import pandas
+from pysyndna.src.fit_syndna_models import \
+    SYNDNA_ID_KEY, SYNDNA_INDIV_NG_UL_KEY, REGRESSION_KEYS
+from qiime2.plugin import SemanticType, ValidationError
 import qiime2.plugin.model as model
 import yaml
 
 
 # Types
-SyndnaPools = SemanticType("SyndnaPools")
+SyndnaPoolConcentrationTable = SemanticType("SyndnaPoolConcentrationTable")
 LinearRegressions = SemanticType("LinearRegressions")
 
+
 # Formats
-class SyndnaPoolsYamlFormat(model.TextFileFormat):
-    """Represents a yaml file of concentrations of each syndna in each pool."""
+class SyndnaPoolCsvFormat(model.TextFileFormat):
+    """Represents a csv file of concentrations of each syndna in one pool."""
 
     def _validate_(self, level):
-        # Not a lot we can validate here as we don't know the name of the
-        # syndna pool(s) or the names of the syndnas in them or the
-        # concentrations of the syndnas in the pool(s), but we can at least
-        # make sure that the file is legitimate yaml and that it contains
-        # the expected top-level key with at least one child key that itself
-        # has at least one child key, with a value that is a positive float.
+        # Validate that the file is a csv and that it has the expected columns.
+        # Note that we don't validate the values in the columns, as we don't
+        # know what they should be.
         with self.path.open("r") as f:
-            config_dict = yaml.safe_load(f)
+            df = pandas.read_csv(f, header=0, comment="#")
 
-        if not isinstance(config_dict, dict):
-            raise ValueError("Expected a dictionary, but got %r" % config_dict)
+        if (len(df.columns) != 2) or (df.columns[0] != SYNDNA_ID_KEY) or \
+                (df.columns[1] != SYNDNA_INDIV_NG_UL_KEY):
+            raise ValidationError(
+                f"Expected exactly two columns '{SYNDNA_ID_KEY}' and "
+                f"'{SYNDNA_INDIV_NG_UL_KEY}', but got {df.columns}")
 
-        if SYNDNA_INDIV_NG_UL_KEY not in config_dict:
-            raise ValueError("Expected a top-level key named %r, but got %r"
-                             % (SYNDNA_INDIV_NG_UL_KEY, config_dict))
+        if len(df) == 0:
+            raise ValidationError("Expected at least one row, but got none")
 
-        if not isinstance(config_dict[SYNDNA_INDIV_NG_UL_KEY], dict):
-            raise ValueError("Expected a dictionary of syndna pool(s) "
-                             "as the value of the top-level key %r, but got %r"
-                             % (SYNDNA_INDIV_NG_UL_KEY,
-                                config_dict[SYNDNA_INDIV_NG_UL_KEY]))
 
-        if len(config_dict[SYNDNA_INDIV_NG_UL_KEY]) == 0:
-            raise ValueError("Expected a key for at least one syndna pool as "
-                             "the value of the top-level key %r, but got none"
-                             % SYNDNA_INDIV_NG_UL_KEY)
-
-        for pool_name, pool_dict in config_dict[SYNDNA_INDIV_NG_UL_KEY].items():
-            if not isinstance(pool_dict, dict):
-                raise ValueError("Expected a dictionary of syndnas as the "
-                                 "value of the key %r, but got %r"
-                                 % (pool_name, pool_dict))
-
-            if len(pool_dict) == 0:
-                raise ValueError("Expected a key for at least one syndna in "
-                                 "the pool %r, but got none" % pool_name)
-
-            for syndna_name, conc in pool_dict.items():
-                if not isinstance(conc, (int, float)):
-                    raise ValueError("Expected a numeric concentration as "
-                                     "the value of the syndna %r, "
-                                     "but got %r" % (syndna_name, conc))
-
-                if conc <= 0:
-                    raise ValueError("Expected a positive concentration as "
-                                     "the value of the syndna %r, but got %r"
-                                     % (syndna_name, conc))
+# So ...
+# https://dev.qiime2.org/latest/storing-data/formats/#single-file-directory-formats
+# states:
+# "Currently QIIME 2 requires that all formats registered to a Semantic Type
+# be a directory format .... For [single file format] cases, there exists a
+# factory for quickly constructing directory layouts that contain only a
+# single file. This requirement might be removed in the future, but for now it
+# is a necessary evil (and also isn’t too much extra work for format
+# developers)."
+# Ok then, here goes:
+SyndnaPoolDirectoryFormat = model.SingleFileDirectoryFormat(
+    'SyndnaPoolDirectoryFormat',
+    'syndna_pool.csv', SyndnaPoolCsvFormat)
 
 
 class LinearRegressionsYamlFormat(model.TextFileFormat):
@@ -75,16 +59,18 @@ class LinearRegressionsYamlFormat(model.TextFileFormat):
         with self.path.open("r") as f:
             config_dict = yaml.safe_load(f)
 
-        if not isinstance(config_dict, dict):
-            raise ValueError("Expected a dictionary, but got %r" % config_dict)
+        if config_dict is None:
+            raise ValidationError(
+                "Expected at least one regression, but got none")
 
-        if len(config_dict) == 0:
-            raise ValueError("Expected at least one regression, but got none")
+        if not isinstance(config_dict, dict):
+            raise ValidationError(
+                "Expected a dictionary, but got %r" % config_dict)
 
         for regression_name, regression_dict in config_dict.items():
             if regression_dict is not None:
                 if not isinstance(regression_dict, dict):
-                    raise ValueError(
+                    raise ValidationError(
                         "Expected None or a dictionary of regression "
                         "information as the value of the key %r, "
                         "but got %r" % (regression_name, regression_dict))
@@ -94,13 +80,32 @@ class LinearRegressionsYamlFormat(model.TextFileFormat):
                 missing_keys = set(REGRESSION_KEYS) - \
                     set(regression_dict.keys())
                 if len(missing_keys) > 0:
-                    raise ValueError(
-                        f"Regression for {regression_name} does not "
+                    raise ValidationError(
+                        f"Expected regression for {regression_name} to "
                         f"include the following required keys: {missing_keys}")
 
                 for required_key in REGRESSION_KEYS:
                     value = regression_dict[required_key]
                     if not isinstance(value, float):
-                        raise ValueError("Expected a float as the value of "
-                                         "the regression information key %r, "
-                                         "but got %r" % (required_key, value))
+                        raise ValidationError(
+                            "Expected a float as the value of the regression "
+                            "information key %r, but got %r" %
+                            (required_key, value))
+
+
+class LinearRegressionsLogFormat(model.TextFileFormat):
+    """Represents a log file of messages about linear regression modeling."""
+
+    def _validate_(self, level):
+        # Validate that it's a readable text file ... no contents required.
+        with self.path.open("r") as f:
+            pass
+
+
+class LinearRegressionsDirectoryFormat(model.DirectoryFormat):
+    """Represents a yaml file of linear regression models and a log."""
+
+    linregs_yaml = model.File(
+        r'linear_regressions.yaml', format=LinearRegressionsYamlFormat)
+    log = model.File(
+        r'linear_regressions.log', format=LinearRegressionsLogFormat)
