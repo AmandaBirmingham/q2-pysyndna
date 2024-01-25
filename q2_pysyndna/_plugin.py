@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pandas
-import pysyndna
+# import pysyndna
 import biom
 from qiime2.plugin import Metadata
 
@@ -44,8 +44,20 @@ def fit(syndna_concs: pandas.DataFrame,
     # basically like a pd.DataFrame but take up less memory
     reads_per_syndna_per_sample_df = syndna_counts.to_dataframe(dense=False)
 
-    linregs_dict, log_msgs_list = pysyndna.fit_linear_regression_models(
-        syndna_concs, metadata, reads_per_syndna_per_sample_df,
-        min_sample_count)
+    # TODO: put back main call after debugging completed
+    # linregs_dict, log_msgs_list = pysyndna.fit_linear_regression_models(
+    #     syndna_concs, metadata, reads_per_syndna_per_sample_df,
+    #     min_sample_count)
+
+    # TODO: remove hardcoded test values after debugging complete
+    linregs_dict = {"example_test": {
+        "slope": 1.24675913604407,
+        "intercept": -7.155318973708384,
+        "rvalue": 0.9863241797356326,
+        "pvalue": 1.505381146809759e-07,
+        "stderr": 0.07365795255302438,
+        "intercept_stderr": 0.2563956755844754}}
+
+    log_msgs_list = ["test log message 1"]
 
     return linregs_dict, log_msgs_list

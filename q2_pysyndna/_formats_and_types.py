@@ -1,9 +1,15 @@
 import pandas
-from pysyndna.src.fit_syndna_models import \
-    SYNDNA_ID_KEY, SYNDNA_INDIV_NG_UL_KEY, REGRESSION_KEYS
+#from pysyndna.src.fit_syndna_models import \
+#    SYNDNA_ID_KEY, SYNDNA_INDIV_NG_UL_KEY, REGRESSION_KEYS
 from qiime2.plugin import SemanticType, ValidationError
 import qiime2.plugin.model as model
 import yaml
+
+# TODO: remove local string literal definitions after debugging complete
+SYNDNA_ID_KEY = "syndna_id"
+SYNDNA_INDIV_NG_UL_KEY = "syndna_indiv_ng_ul"
+REGRESSION_KEYS = ["slope", "intercept", "rvalue", "pvalue", "stderr",
+                   "intercept_stderr"]
 
 
 # Types
