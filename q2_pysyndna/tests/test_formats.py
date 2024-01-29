@@ -1,4 +1,3 @@
-
 from q2_pysyndna import (
     __package_name__, SyndnaPoolCsvFormat, LinearRegressionsYamlFormat,
     LinearRegressionsLogFormat, LinearRegressionsDirectoryFormat

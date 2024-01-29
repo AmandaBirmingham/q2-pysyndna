@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 import pandas
+from typing import Dict, Union, List, Optional
 import q2_pysyndna
 from q2_pysyndna._formats_and_types import (
     SyndnaPoolCsvFormat,
@@ -8,6 +7,7 @@ from q2_pysyndna._formats_and_types import (
     SyndnaPoolConcentrationTable,
     LinearRegressionsYamlFormat, LinearRegressionsLogFormat,
     LinearRegressionsDirectoryFormat, LinearRegressions)
+from q2_pysyndna._plugin import LinearRegressionsObjects
 
 from q2_types.feature_table import (FeatureTable, Frequency)
 from qiime2.plugin import (Plugin, Int, Range, Metadata, Citations)
@@ -44,20 +44,46 @@ def _1(ff: SyndnaPoolCsvFormat) -> pandas.DataFrame:
 
 
 @plugin.register_transformer
-def _2(data: dict[str, dict[str, float] | None]) -> \
+def _2(data: Dict[str, Union[Dict[str, float], None]]) -> \
         LinearRegressionsYamlFormat:
-    ff = LinearRegressionsYamlFormat()
+    ff = _fill_linearregressionsyamlformat(data)
+    return ff
+
+
+def _fill_linearregressionsyamlformat(
+        data: Dict[str, Union[Dict[str, float], None]],
+        ff: Optional[LinearRegressionsYamlFormat] = None) -> \
+        LinearRegressionsYamlFormat:
+    if ff is None:
+        ff = LinearRegressionsYamlFormat()
     with ff.open() as fh:
         yaml.safe_dump(data, fh)
     return ff
 
 
 @plugin.register_transformer
-def _3(data: list[str]) -> LinearRegressionsLogFormat:
+def _3(data: List[str]) -> LinearRegressionsLogFormat:
+    ff = _fill_linearregressionslogformat(data)
+    return ff
+
+
+def _fill_linearregressionslogformat(
+        data: List[str],
+        ff: Optional[LinearRegressionsLogFormat] = None)\
+        -> LinearRegressionsLogFormat:
     data_str = '\n'.join(data)
-    ff = LinearRegressionsLogFormat()
+    if ff is None:
+        ff = LinearRegressionsLogFormat()
     with ff.open() as fh:
         fh.write(data_str)
+    return ff
+
+
+@plugin.register_transformer
+def _4(data: LinearRegressionsObjects) -> LinearRegressionsDirectoryFormat:
+    ff = LinearRegressionsDirectoryFormat()
+    _ = _2(data.linregs_dict, ff.linregressions)
+    _ = _3(data.log_msgs_list, ff.log_messages)
     return ff
 
 
@@ -85,4 +111,3 @@ plugin.methods.register_function(
         'regression_models': 'Linear regression models trained for each '
                              'qualifying sample.'}
 )
-
