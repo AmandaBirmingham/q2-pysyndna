@@ -15,7 +15,7 @@ If you have a biom table that is not already imported into an artifact, run:
 qiime tools import \
     --input-path syndna_counts.biom \
     --output-path syndna_counts.qza \
-    --type FeatureTable[Frequency]
+    --type 'FeatureTable[Frequency]'
 ```
 
 ```

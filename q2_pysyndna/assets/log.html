@@ -1,0 +1,20 @@
+{% extends "tab-child.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-12">
+    <h1><span style="font-family: monospace">pysyndna</span> Log</h1>
+    <div class="row">
+      {% if log_msgs|length < 1 %}
+          No log messages.
+      {% else %}
+          <ol>
+              {% for log_msg in log_msgs %}
+                  <li>{{ log_msg }}</li>
+              {% endfor %}
+          </ol>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

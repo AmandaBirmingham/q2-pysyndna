@@ -1,21 +1,22 @@
-from ._plugin import fit
-from ._formats_and_types import (
+from ._settings import (
+    __plugin_name__, __package_name__,
+    __description__, __long_description__, __license__,
+    __author__, __email__, __url__, __citations_fname__)
+from ._type_format_syndna_pool import (
     SyndnaPoolCsvFormat, SyndnaPoolDirectoryFormat,
-    SyndnaPoolConcentrationTable,
-    LinearRegressionsYamlFormat, LinearRegressionsLogFormat,
+    SyndnaPoolConcentrationTable)
+from ._type_format_linear_regressions import (
+    LinearRegressionsYamlFormat,
     LinearRegressionsDirectoryFormat, LinearRegressions)
+from ._type_format_pysyndna_log import (
+    PysyndnaLogFormat,
+    PysyndnaLogDirectoryFormat, PysyndnaLog)
+from ._type_format_length import (
+    TSVLengthFormat, TSVLengthDirectoryFormat, Length)
+from ._method import fit, calc_cell_counts
+from ._visualizer import view_log, view_fit
+
 from . import _version
-__version__ = _version.get_versions()['version']
 
 __name__ = 'q2-pysyndna'
-__plugin_name__ = 'pysyndna'
-__package_name__ = 'q2_pysyndna'
-__description__ = 'Plugin to calculate absolute microbial cell counts'
-__long_description__ = ('This QIIME 2 plugin wraps pysyndna to calculate '
-                        'absolute microbial cell counts from shotgun data '
-                        'that includes synthetic DNA spike-ins.')
-__license__ = 'BSD-3-Clause'
-__author__ = 'Amanda Birmingham'
-__email__ = 'abirmingham@ucsd.edu'
-__url__ = 'https://github.com/AmandaBirmingham/q2-pysyndna'
-__citations_fname__ = 'citations.bib'
+__version__ = _version.get_versions()['version']

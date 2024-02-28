@@ -3,7 +3,7 @@ from pandas.testing import assert_frame_equal
 from qiime2.plugin.testing import TestPluginBase
 from q2_pysyndna import (
     __package_name__, SyndnaPoolCsvFormat, LinearRegressionsYamlFormat,
-    LinearRegressionsLogFormat)
+    PysyndnaLogFormat)
 import q2_pysyndna.plugin_setup as plugin_setup
 
 
