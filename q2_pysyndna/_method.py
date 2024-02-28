@@ -43,7 +43,7 @@ def fit(syndna_concs: pandas.DataFrame,
         fitting process.
     """
 
-    # # # TODO: put back real logic after debugging complete
+    # # TODO: put back real logic after debugging complete
     # # convert input biom table to a pd.SparseDataFrame, which is should act
     # # basically like a pd.DataFrame but take up less memory
     # reads_per_syndna_per_sample_df = syndna_counts.to_dataframe(dense=False)
