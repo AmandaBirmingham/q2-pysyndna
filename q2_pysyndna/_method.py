@@ -32,7 +32,7 @@ def fit(syndna_concs: pandas.DataFrame,
 
     Returns
     -------
-    linear_regressions_objects_tuple: LinearRegressionsObjects
+    linear_regressions_object: LinearRegressionsObjects
         Tuple of the linear regression models and the log messages generated
         during the fitting process. The linear regression models are a
         Dictionary keyed by sample id, containing for each sample either None
