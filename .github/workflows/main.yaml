@@ -27,7 +27,13 @@ jobs:
           environment-file: qiime2-latest-py38-linux-conda.yml
           auto-activate-base: false
 
-      - name: Install and run unit tests
+      - name: Install pysyndna into qiime2 environment
+        run: |
+          wget https://raw.githubusercontent.com/AmandaBirmingham/pysyndna/main/environment.yml -O pysyndna.yml
+          conda env update --name qiime2 --file pysyndna.yml
+          pip install git+https://github.com/AmandaBirmingham/pysyndna.git
+
+      - name: Install q2-pysyndna and run unit tests
         run: |
           conda install pytest
           which python
