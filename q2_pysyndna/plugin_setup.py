@@ -25,7 +25,13 @@ from q2_pysyndna._type_format_length import (
     Length,
     TSVLengthFormat, TSVLengthDirectoryFormat,
     tsvlength_fp_to_dataframe,
-    dataframe_to_tsvlength_format, biom_to_tsvlength_format)
+    dataframe_to_tsvlength_format)
+from q2_pysyndna._type_format_coords import (
+    Coords,
+    CoordsFormat, CoordsDirectoryFormat,
+    coords_fp_to_dataframe,
+    dataframe_to_coords_format
+)
 
 plugin = Plugin(
     name=q2_pysyndna.__plugin_name__,
@@ -61,6 +67,14 @@ plugin.register_artifact_class(
     FeatureData[Length],
     directory_format=TSVLengthDirectoryFormat,
     description="Integer lengths associated with a set of features.")
+
+plugin.register_semantic_types(Coords)
+plugin.register_formats(CoordsFormat, CoordsDirectoryFormat)
+plugin.register_artifact_class(
+    FeatureData[Coords],
+    directory_format=CoordsDirectoryFormat,
+    description="Integer start and end positions associated with "
+                "a set of features.")
 
 
 @plugin.register_transformer
@@ -144,10 +158,6 @@ def _linearregsdir_to_linearregobjs(
     return result
 
 
-# TODO: probably should also be able to transform a tsvlength format to/from
-#  a pandas series
-
-
 @plugin.register_transformer
 def _tsvlen_to_df(ff: TSVLengthFormat) -> pandas.DataFrame:
     # validate the dataframe and convert lengths to integers
@@ -160,9 +170,16 @@ def _df_to_tsvlen(df: pandas.DataFrame) -> TSVLengthFormat:
     return dataframe_to_tsvlength_format(df)
 
 
-# @plugin.register_transformer
-# def _biom_to_tsvlen(bt: biom.Table) -> TSVLengthFormat:
-#     return biom_to_tsvlength_format(bt)
+@plugin.register_transformer
+def _coords_to_df(ff: CoordsFormat) -> pandas.DataFrame:
+    # validate the dataframe and convert coords to integers
+    df = coords_fp_to_dataframe(str(ff))
+    return df
+
+
+@plugin.register_transformer
+def _df_to_coords(df: pandas.DataFrame) -> CoordsFormat:
+    return dataframe_to_coords_format(df)
 
 
 plugin.methods.register_function(
@@ -192,7 +209,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_pysyndna.calc_cell_counts,
+    function=q2_pysyndna.count_cells,
     name='Calculate cell counts.',
     description=(
         'Calculate number of cells of each OGU per gram of sample using '
@@ -233,13 +250,27 @@ plugin.methods.register_function(
                           'process.'}
 )
 
-plugin.visualizers.register_function(
-    function=q2_pysyndna.view_log,
-    name='Visualize log messages.',
-    description='Visualize log messages from a pysyndna process.',
-    inputs={'log': PysyndnaLog},
-    input_descriptions={'log': 'Log messages from a pysyndna process.'},
-    parameters={},
+
+plugin.methods.register_function(
+    function=q2_pysyndna.count_copies,
+    name='Calculate copies of RNA of each OGU+ORF.',
+    description=(
+        'Calculate number of copies of RNA of each OGU+ORF '
+        '(each ORF on each OGU) per gram of sample.'),
+    inputs={'ogu_orf_counts': FeatureTable[Frequency],
+            'ogu_orf_coords': FeatureData[Coords]},
+    input_descriptions={
+        'ogu_orf_counts': 'Feature table of OGU+ORF counts.',
+        'ogu_orf_coords': 'Start and end coordinates of OGU+ORFs.'},
+    parameters={'metadata': Metadata},
+    parameter_descriptions={
+        'metadata': 'Metadata file with sample information.'},
+    outputs=[('copy_counts', FeatureTable[Frequency]),
+             ('copy_count_log', PysyndnaLog)],
+    output_descriptions={
+        'copy_counts': 'RNA copy counts per OGU+ORF per sample.',
+        'copy_count_log': 'Log messages from the copy count calculation '
+                          'process.'}
 )
 
 plugin.visualizers.register_function(
@@ -250,5 +281,14 @@ plugin.visualizers.register_function(
     inputs={'linear_regressions': LinearRegressions},
     input_descriptions={
         'linear_regressions': 'Results of a pysyndna fit process.'},
+    parameters={},
+)
+
+plugin.visualizers.register_function(
+    function=q2_pysyndna.view_log,
+    name='Visualize log messages.',
+    description='Visualize log messages from a pysyndna process.',
+    inputs={'log': PysyndnaLog},
+    input_descriptions={'log': 'Log messages from a pysyndna process.'},
     parameters={},
 )

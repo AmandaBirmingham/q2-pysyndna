@@ -10,7 +10,7 @@ from q2_pysyndna import (
     Length)
 from q2_pysyndna._type_format_length import (
     tsvlength_fp_to_dataframe,
-    dataframe_to_tsvlength_format, biom_to_tsvlength_format,
+    dataframe_to_tsvlength_format,
     FEATURE_NAME_KEY, LENGTH_KEY)
 
 

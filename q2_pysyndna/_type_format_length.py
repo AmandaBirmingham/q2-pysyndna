@@ -44,31 +44,6 @@ def dataframe_to_tsvlength_format(df):
     return ff
 
 
-def biom_to_tsvlength_format(table):
-    metadata = table.metadata(axis=OBSERVATION_KEY)
-    ids = table.ids(axis=OBSERVATION_KEY)
-    if metadata is None:
-        raise TypeError(f'Table must have {OBSERVATION_KEY} metadata.')
-
-    length = []
-    for oid, m in zip(ids, metadata):
-        if LENGTH_KEY not in m:
-            raise ValueError(f'Observation {oid} does not contain '
-                             f'`{LENGTH_KEY}` metadata.')
-
-        try:
-            length.append('; '.join(m[LENGTH_KEY]))
-        except Exception as e:
-            raise TypeError('There was a problem preparing the %s '
-                            'data for Observation %s. Metadata should be '
-                            'formatted as a list of strings; received %r.'
-                            % (LENGTH_KEY, oid, type(m['taxonomy']))) from e
-
-    series = pandas.Series(length, index=ids, name=LENGTH_KEY)
-    series.index.name = FEATURE_NAME_KEY
-    return dataframe_to_tsvlength_format(series.to_frame())
-
-
 def _validate_and_cast_tsvlength_df(df: pandas.DataFrame) -> pandas.DataFrame:
     if len(df.index) < 1:
         raise ValidationError("Length format requires at least one row of data.")

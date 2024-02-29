@@ -13,7 +13,7 @@ from ._type_format_pysyndna_log import (
     PysyndnaLogDirectoryFormat, PysyndnaLog)
 from ._type_format_length import (
     TSVLengthFormat, TSVLengthDirectoryFormat, Length)
-from ._method import fit, calc_cell_counts
+from ._method import fit, count_cells, count_copies
 from ._visualizer import view_log, view_fit
 
 from . import _version

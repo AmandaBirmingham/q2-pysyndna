@@ -1,11 +1,12 @@
 import biom
-import numpy as np
 import pandas
 from qiime2.plugin import Metadata
 
-from pysyndna import OGU_CELLS_PER_G_OF_SAMPLE_KEY
+from pysyndna import fit_linear_regression_models, calc_ogu_cell_counts_biom, \
+    calc_copies_of_ogu_orf_ssrna_per_g_sample_from_dfs, \
+    OGU_CELLS_PER_G_OF_SAMPLE_KEY
 from q2_pysyndna._type_format_linear_regressions import \
-    LinearRegressionsObjects, LinearRegressionsDirectoryFormat
+    LinearRegressionsObjects
 
 
 # NB: Because there is a transformer on the plugin that can turn a
@@ -43,31 +44,20 @@ def fit(syndna_concs: pandas.DataFrame,
         fitting process.
     """
 
-    # # TODO: put back real logic after debugging complete
-    # # convert input biom table to a pd.SparseDataFrame, which is should act
-    # # basically like a pd.DataFrame but take up less memory
-    # reads_per_syndna_per_sample_df = syndna_counts.to_dataframe(dense=False)
-    #
-    # linregs_dict, log_msgs_list = pysyndna.fit_linear_regression_models(
-    #     syndna_concs, metadata, reads_per_syndna_per_sample_df,
-    #     min_sample_count)
+    # convert input biom table to a pd.SparseDataFrame, which is should act
+    # basically like a pd.DataFrame but take up less memory
+    reads_per_syndna_per_sample_df = syndna_counts.to_dataframe(dense=False)
 
-    # # TODO: remove hardcoded test values after debugging complete
-    linregs_dict = {"example_test": {
-        "slope": 1.24675913604407,
-        "intercept": -7.155318973708384,
-        "rvalue": 0.9863241797356326,
-        "pvalue": 1.505381146809759e-07,
-        "stderr": 0.07365795255302438,
-        "intercept_stderr": 0.2563956755844754}}
-    log_msgs_list = ["test log message 1"]
+    linregs_dict, log_msgs_list = fit_linear_regression_models(
+        syndna_concs, metadata, reads_per_syndna_per_sample_df,
+        min_sample_count)
 
     result = LinearRegressionsObjects(linregs_dict, log_msgs_list)
     return result
 
 
-def calc_cell_counts(
-        regression_models: LinearRegressionsDirectoryFormat,
+def count_cells(
+        regression_models: LinearRegressionsObjects,
         ogu_counts: biom.Table,
         ogu_lengths:  pandas.DataFrame,
         metadata: Metadata,
@@ -111,43 +101,48 @@ def calc_cell_counts(
         log message strings generated during the calculation process.
     """
 
-    # TODO: put back real functioning logic after debugging complete
-    # cell_counts_biom, log_msgs_list = pysyndna.calc_ogu_cell_counts_biom(
-    #     regression_models.linregs_dict, metadata, ogu_counts,
-    #     ogu_lengths, read_length, min_percent_coverage, min_rsquared,
-    #     output_metric)
-
-    # TODO: remove hardcoded test values after debugging complete
-    sample_ids = ["example1", "example4"]
-    ogu_cell_counts_per_g_sample = np.array([
-        [157373183.3914873, 23597204.3149076],
-        [51026330.8697321, 134672840.2210325],
-        [41099206.6945521, 0],
-        [378706815.3787082, 56777764.5887874],
-        [80657360.0375914, 12008439.3369959],
-        [66764001.1050239, 9985433.5965833],
-        [78187617.9691203, 0],
-        [91085928.0975326, 13631697.3528372],
-        [199150566.7379318, 29865774.0278729],
-        [83241001.9519951, 12452394.7533948],
-        [41754672.7649972, 6239881.9809863],
-        [92468147.5568761, 13848368.6486051],
-        [41072627.7089503, 6138060.2138924]])
-
-    ogu_ids = [
-        'Escherichia coli', 'Fusobacterium periodonticum',
-        'Haemophilus influenzae', 'Lactobacillus gasseri',
-        'Leptolyngbya valderiana', 'Neisseria flavescens',
-        'Neisseria subflava', 'Prevotella sp. oral taxon 299',
-        'Ruminococcus albus', 'Streptococcus mitis',
-        'Streptococcus pneumoniae', 'Tyzzerella nexilis',
-        'Veillonella dispar']
-
-    cell_counts_biom = biom.table.Table(
-        ogu_cell_counts_per_g_sample,
-        ogu_ids,
-        sample_ids)
-
-    log_msgs_list = ["test log message 1", "test log message 2"]
+    cell_counts_biom, log_msgs_list = calc_ogu_cell_counts_biom(
+        metadata, regression_models.linregs_dict, ogu_counts,
+        ogu_lengths, read_length, min_percent_coverage, min_rsquared,
+        output_metric)
 
     return cell_counts_biom, log_msgs_list
+
+
+def count_copies(
+        ogu_orf_counts: biom.Table,
+        ogu_orf_coords: pandas.DataFrame,
+        metadata: pandas.DataFrame) -> \
+        (biom.Table, list):
+
+    """Calculate the copies of each OGU+ORF ssRNA per gram of sample.
+
+    Parameters
+    ----------
+    ogu_orf_counts : biom.Table
+        A biom.Table with the number of reads per OGU+ORF per sample, such
+        as that output by woltka.
+    ogu_orf_coords: pandas.DataFrame
+        A DataFrame with columns for OGU_ORF_ID_KEY, OGU_ORF_START_KEY, and
+        OGU_ORF_END_KEY.
+    metadata : pandas.DataFrame
+        A DataFrame containing at least SAMPLE_ID_KEY,
+        SAMPLE_IN_ALIQUOT_MASS_G_KEY, SSRNA_CONCENTRATION_NG_UL_KEY,
+        ELUTE_VOL_UL_KEY, and TOTAL_BIOLOGICAL_READS_KEY.
+
+    Returns
+    -------
+    copies_of_ogu_orf_ssrna_per_g_sample : biom.Table
+        A biom.Table with the copies of each OGU+ORF ssRNA per gram of sample.
+    log_msgs_list: list[str]
+        A list of log messages, if any, generated during the function's
+        operation.  Empty if no log messages were generated.
+    """
+
+    copies_of_ogu_orf_ssrna_per_g_sample, log_msgs_list = \
+        calc_copies_of_ogu_orf_ssrna_per_g_sample_from_dfs(
+            metadata,
+            ogu_orf_counts,
+            ogu_orf_coords)
+
+    return copies_of_ogu_orf_ssrna_per_g_sample, log_msgs_list
