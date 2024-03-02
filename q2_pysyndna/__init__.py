@@ -13,6 +13,8 @@ from ._type_format_pysyndna_log import (
     PysyndnaLogDirectoryFormat, PysyndnaLog)
 from ._type_format_length import (
     TSVLengthFormat, TSVLengthDirectoryFormat, Length)
+from ._type_format_coords import (
+    CoordsFormat, CoordsDirectoryFormat, Coords)
 from ._method import fit, count_cells, count_copies
 from ._visualizer import view_log, view_fit
 

@@ -4,9 +4,15 @@ from qiime2.plugin import Metadata
 
 from pysyndna import fit_linear_regression_models, calc_ogu_cell_counts_biom, \
     calc_copies_of_ogu_orf_ssrna_per_g_sample_from_dfs, \
-    OGU_CELLS_PER_G_OF_SAMPLE_KEY
+    OGU_CELLS_PER_G_OF_SAMPLE_KEY, OGU_ID_KEY, OGU_LEN_IN_BP_KEY
 from q2_pysyndna._type_format_linear_regressions import \
     LinearRegressionsObjects
+
+
+def _make_pysydna_metadata(metadata: pandas.DataFrame) -> pandas.DataFrame:
+    metadata_df = metadata.to_dataframe()
+    metadata_df.reset_index(inplace=True)
+    return metadata_df
 
 
 # NB: Because there is a transformer on the plugin that can turn a
@@ -44,12 +50,14 @@ def fit(syndna_concs: pandas.DataFrame,
         fitting process.
     """
 
+    metadata_df = _make_pysydna_metadata(metadata)
+
     # convert input biom table to a pd.SparseDataFrame, which is should act
     # basically like a pd.DataFrame but take up less memory
     reads_per_syndna_per_sample_df = syndna_counts.to_dataframe(dense=False)
 
     linregs_dict, log_msgs_list = fit_linear_regression_models(
-        syndna_concs, metadata, reads_per_syndna_per_sample_df,
+        syndna_concs, metadata_df, reads_per_syndna_per_sample_df,
         min_sample_count)
 
     result = LinearRegressionsObjects(linregs_dict, log_msgs_list)
@@ -101,8 +109,13 @@ def count_cells(
         log message strings generated during the calculation process.
     """
 
+    metadata_df = _make_pysydna_metadata(metadata)
+
+    ogu_lengths.index.name = OGU_ID_KEY
+    ogu_lengths.columns = [OGU_LEN_IN_BP_KEY]
+
     cell_counts_biom, log_msgs_list = calc_ogu_cell_counts_biom(
-        metadata, regression_models.linregs_dict, ogu_counts,
+        metadata_df, regression_models.linregs_dict, ogu_counts,
         ogu_lengths, read_length, min_percent_coverage, min_rsquared,
         output_metric)
 
@@ -112,7 +125,7 @@ def count_cells(
 def count_copies(
         ogu_orf_counts: biom.Table,
         ogu_orf_coords: pandas.DataFrame,
-        metadata: pandas.DataFrame) -> \
+        metadata: Metadata) -> \
         (biom.Table, list):
 
     """Calculate the copies of each OGU+ORF ssRNA per gram of sample.
@@ -125,8 +138,8 @@ def count_copies(
     ogu_orf_coords: pandas.DataFrame
         A DataFrame with columns for OGU_ORF_ID_KEY, OGU_ORF_START_KEY, and
         OGU_ORF_END_KEY.
-    metadata : pandas.DataFrame
-        A DataFrame containing at least SAMPLE_ID_KEY,
+    metadata : Metadata
+        A Metadata object containing SAMPLE_ID_KEY as key and
         SAMPLE_IN_ALIQUOT_MASS_G_KEY, SSRNA_CONCENTRATION_NG_UL_KEY,
         ELUTE_VOL_UL_KEY, and TOTAL_BIOLOGICAL_READS_KEY.
 
@@ -139,9 +152,11 @@ def count_copies(
         operation.  Empty if no log messages were generated.
     """
 
+    metadata_df = _make_pysydna_metadata(metadata)
+
     copies_of_ogu_orf_ssrna_per_g_sample, log_msgs_list = \
         calc_copies_of_ogu_orf_ssrna_per_g_sample_from_dfs(
-            metadata,
+            metadata_df,
             ogu_orf_counts,
             ogu_orf_coords)
 

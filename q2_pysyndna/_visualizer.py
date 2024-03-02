@@ -5,11 +5,10 @@ import yaml
 
 from q2_pysyndna._settings import __package_name__
 from q2_pysyndna._type_format_pysyndna_log import PysyndnaLogDirectoryFormat, \
-    extract_fp_from_directory_format, load_list_from_pysyndnalog_fp, \
-    extract_list_from_pysyndnalogdir_format
+    pysyndna_log_directory_format_to_list
 from q2_pysyndna._type_format_linear_regressions import \
     LinearRegressionsDirectoryFormat, \
-    load_and_validate_linearregressionsyaml_fp
+    linear_regressions_directory_format_to_linear_regressions_objects
 
 LOG_FNAME = 'log.html'
 FITS_FNAME = 'fits.html'
@@ -30,20 +29,15 @@ def view_fit(output_dir: str,
     html_fnames = []
     context = _check_context({})
 
-    linregs_fp = extract_fp_from_directory_format(
-        linear_regressions, linear_regressions.linregs_yaml)
-    linregs_dict = load_and_validate_linearregressionsyaml_fp(linregs_fp)
+    linear_reg_objs = linear_regressions_directory_format_to_linear_regressions_objects(
+        linear_regressions)
 
-    log_fp = extract_fp_from_directory_format(
-        linear_regressions, linear_regressions.log)
-    logs_list = load_list_from_pysyndnalog_fp(log_fp)
-
-    linregs_yaml_str = yaml.dump(linregs_dict)
+    linregs_yaml_str = yaml.dump(linear_reg_objs.linregs_dict)
     context['linregs_yaml'] = linregs_yaml_str
     context[TABS_KEY].append({URL_KEY: FITS_FNAME, TITLE_KEY: 'Fits'})
     html_fnames.append(FITS_FNAME)
 
-    context, log_fname = _prep_log_view(context, logs_list)
+    context, log_fname = _prep_log_view(context, linear_reg_objs.log_msgs_list)
     html_fnames.append(log_fname)
 
     templates = _generate_template_fps(html_fnames)
@@ -51,7 +45,7 @@ def view_fit(output_dir: str,
 
 
 def view_log(output_dir: str, log: PysyndnaLogDirectoryFormat) -> None:
-    log_list = extract_list_from_pysyndnalogdir_format(log)
+    log_list = pysyndna_log_directory_format_to_list(log)
     context, html_fname = _prep_log_view({}, log_list)
     templates = _generate_template_fps([html_fname])
     q2templates.render(templates, output_dir, context=context)

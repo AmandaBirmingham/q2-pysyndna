@@ -43,3 +43,8 @@ class SyndnaPoolCsvFormat(model.TextFileFormat):
 SyndnaPoolDirectoryFormat = model.SingleFileDirectoryFormat(
     'SyndnaPoolDirectoryFormat',
     'syndna_pool.csv', SyndnaPoolCsvFormat)
+
+
+def syndna_pool_csv_format_to_df(ff: SyndnaPoolCsvFormat) -> pandas.DataFrame:
+    result = pandas.read_csv(str(ff), header=0, comment='#')
+    return result

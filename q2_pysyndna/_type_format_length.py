@@ -17,14 +17,14 @@ class TSVLengthFormat(model.TextFileFormat):
     """
 
     def _validate_(self, level):
-        _ = tsvlength_fp_to_dataframe(str(self.path))
+        _ = length_fp_to_df(str(self.path))
 
 
 TSVLengthDirectoryFormat = model.SingleFileDirectoryFormat(
     'TSVLengthDirectoryFormat', 'lengths.tsv', TSVLengthFormat)
 
 
-def tsvlength_fp_to_dataframe(fp: str) -> pandas.DataFrame:
+def length_fp_to_df(fp: str) -> pandas.DataFrame:
     # Using `dtype=object` and `set_index()` to avoid type casting/inference of
     # any columns or the index.
     df = pandas.read_csv(fp, sep='\t', header=None, index_col=0,
@@ -37,7 +37,7 @@ def tsvlength_fp_to_dataframe(fp: str) -> pandas.DataFrame:
     return checked_df
 
 
-def dataframe_to_tsvlength_format(df):
+def df_to_tsv_length_format(df):
     df = _validate_and_cast_tsvlength_df(df)
     ff = TSVLengthFormat()
     df.to_csv(str(ff), sep='\t', header=False, index=True)

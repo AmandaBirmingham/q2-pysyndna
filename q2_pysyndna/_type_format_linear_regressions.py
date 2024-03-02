@@ -5,7 +5,9 @@ import qiime2.plugin.model as model
 import yaml
 
 from pysyndna.src.fit_syndna_models import REGRESSION_KEYS
-from q2_pysyndna._type_format_pysyndna_log import PysyndnaLogFormat
+from q2_pysyndna._type_format_pysyndna_log import PysyndnaLogFormat, \
+    log_fp_to_list, extract_fp_from_directory_format, \
+    list_to_pysyndna_log_format
 
 LinearRegressionsObjects = collections.namedtuple(
     "LinearRegressionsObjects",
@@ -18,7 +20,7 @@ class LinearRegressionsYamlFormat(model.TextFileFormat):
     """Represents a yaml file of linear regression models."""
 
     def _validate_(self, level):
-        _ = load_and_validate_linearregressionsyaml_fp(self.path)
+        _ = yaml_fp_to_linear_regressions_yaml_format(self.path)
 
 
 class LinearRegressionsDirectoryFormat(model.DirectoryFormat):
@@ -30,7 +32,7 @@ class LinearRegressionsDirectoryFormat(model.DirectoryFormat):
         r'linear_regressions.log', format=PysyndnaLogFormat)
 
 
-def load_and_validate_linearregressionsyaml_fp(yaml_fp) -> \
+def yaml_fp_to_linear_regressions_yaml_format(yaml_fp) -> \
         Dict[str, Union[Dict[str, float], None]]:
 
     # Not a lot we can validate here as we don't know the names of the
@@ -77,7 +79,7 @@ def load_and_validate_linearregressionsyaml_fp(yaml_fp) -> \
     return config_dict
 
 
-def fill_linearregressionsyamlformat(
+def dict_to_linear_regressions_yaml_format(
         data: Dict[str, Union[Dict[str, float], None]],
         ff: Optional[LinearRegressionsYamlFormat] = None) -> \
         LinearRegressionsYamlFormat:
@@ -87,3 +89,25 @@ def fill_linearregressionsyamlformat(
         yaml.safe_dump(data, fh)
     return ff
 
+
+def linear_regressions_directory_format_to_linear_regressions_objects(
+        data: LinearRegressionsDirectoryFormat) -> LinearRegressionsObjects:
+    linregs_fp = extract_fp_from_directory_format(data, data.linregs_yaml)
+    linregs_dict = yaml_fp_to_linear_regressions_yaml_format(linregs_fp)
+
+    log_fp = extract_fp_from_directory_format(data, data.log)
+    log_msgs_list = log_fp_to_list(log_fp)
+
+    result = LinearRegressionsObjects(linregs_dict, log_msgs_list)
+    return result
+
+
+def linear_regressions_objects_to_linear_regressions_directory_format(
+        data: LinearRegressionsObjects) -> LinearRegressionsDirectoryFormat:
+    fy = dict_to_linear_regressions_yaml_format(data.linregs_dict)
+    fl = list_to_pysyndna_log_format(data.log_msgs_list)
+
+    ff = LinearRegressionsDirectoryFormat()
+    ff.linregs_yaml.write_data(fy, LinearRegressionsYamlFormat)
+    ff.log.write_data(fl, PysyndnaLogFormat)
+    return ff

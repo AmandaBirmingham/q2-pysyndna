@@ -1,6 +1,7 @@
 import biom
 import numpy as np
 import pandas as pd
+from qiime2 import Metadata
 from qiime2.plugin.testing import TestPluginBase
 
 from pysyndna.tests.test_fit_syndna_models import FitSyndnaModelsTestData, \
@@ -25,6 +26,10 @@ class TestFit(TestPluginBase):
         syndna_concs_df = pd.DataFrame(FitSyndnaModelsTestData.syndna_concs_dict)
         sample_syndna_weights_and_total_reads_df = pd.DataFrame(
             FitSyndnaModelsTestData.a_b_sample_syndna_weights_and_total_reads_dict)
+        sample_syndna_weights_and_total_reads_df.set_index(
+            SAMPLE_ID_KEY, inplace=True)
+        metadata = Metadata(sample_syndna_weights_and_total_reads_df)
+
         reads_per_syndna_per_sample_df = pd.DataFrame(
             FitSyndnaModelsTestData.reads_per_syndna_per_sample_dict)
         reads_per_syndna_per_sample_df.set_index(SYNDNA_ID_KEY, inplace=True)
@@ -37,7 +42,7 @@ class TestFit(TestPluginBase):
         out_linregress_dict, out_msgs = fit(
             syndna_concs_df,
             input_biom,
-            sample_syndna_weights_and_total_reads_df, min_count)
+            metadata, min_count)
 
         a_tester = Testers()
         a_tester.assert_dicts_almost_equal(
@@ -60,6 +65,9 @@ class TestCountCells(TestPluginBase):
         counts_vals = TestCalcCellCountsData.make_combined_counts_np_array()
 
         params_df = pd.DataFrame(params_dict)
+        params_df.set_index(SAMPLE_ID_KEY, inplace=True)
+        metadata = Metadata(params_df)
+
         counts_biom = biom.table.Table(
             counts_vals,
             TestCalcCellCountsData.ogu_lengths_dict[OGU_ID_KEY],
@@ -88,7 +96,7 @@ class TestCountCells(TestPluginBase):
         # of Avogadro's #, not the truncated version that was used in the
         # notebook, so the results are slightly different (but more realistic)
         output_biom, output_msgs = count_cells(
-            linregs_objs, counts_biom, lengths_df, params_df,
+            linregs_objs, counts_biom, lengths_df, metadata,
             read_len, min_coverage, min_rsquared, output_metric)
 
         # NB: only checking results to 2 decimals because Ubuntu and Mac
@@ -110,6 +118,9 @@ class TestCountCopies(TestPluginBase):
     def test_count_copies(self):
         input_quant_params_per_sample_df = pd.DataFrame(
             TestQuantOrfsData.PARAMS_DICT)
+        input_quant_params_per_sample_df.set_index(SAMPLE_ID_KEY, inplace=True)
+        metadata = Metadata(input_quant_params_per_sample_df)
+
         ogu_orf_coords_df = pd.DataFrame(TestQuantOrfsData.COORDS_DICT)
 
         input_reads_per_ogu_orf_per_sample_biom = biom.table.Table(
@@ -124,7 +135,7 @@ class TestCountCopies(TestPluginBase):
 
         output_biom, output_msgs = count_copies(
             input_reads_per_ogu_orf_per_sample_biom,
-            ogu_orf_coords_df, input_quant_params_per_sample_df)
+            ogu_orf_coords_df, metadata)
 
         # NB: Comparing the bioms as dataframes because the biom equality
         # compare does not allow "almost equal" checking for float values,

@@ -9,8 +9,8 @@ from q2_pysyndna import (
     TSVLengthFormat, TSVLengthDirectoryFormat,
     Length)
 from q2_pysyndna._type_format_length import (
-    tsvlength_fp_to_dataframe,
-    dataframe_to_tsvlength_format,
+    length_fp_to_df,
+    df_to_tsv_length_format,
     FEATURE_NAME_KEY, LENGTH_KEY)
 
 
@@ -26,7 +26,7 @@ class TestLengthTypes(TestPluginBase):
 class TestTSVLengthFormat(TestPluginBase):
     package = f'{__package_name__}.tests'
 
-    def test_tsvlength_format_valid(self):
+    def test_tsv_length_format_valid(self):
         filenames = ['feature_length/lengths.tsv']
         filepaths = [self.get_data_path(filename)
                      for filename in filenames]
@@ -35,7 +35,7 @@ class TestTSVLengthFormat(TestPluginBase):
             test_format = TSVLengthFormat(filepath, mode='r')
             test_format.validate()
 
-    def test_tsvlength_format_duplicate_invalid(self):
+    def test_tsv_length_format_duplicate_invalid(self):
         expected_msg = "Length format feature IDs must be unique. The " \
                        "following IDs are duplicated: G000005825"
         filepath = self.get_data_path('feature_lengths_malformed_1.tsv')
@@ -44,7 +44,7 @@ class TestTSVLengthFormat(TestPluginBase):
             test_format = TSVLengthFormat(filepath, mode='r')
             test_format.validate()
 
-    def test_tsvlength_format_notint_invalid(self):
+    def test_tsv_length_format_notint_invalid(self):
         expected_msg = \
             "Lengths must be integers, but found non-integer values."
         filepath = self.get_data_path('feature_lengths_malformed_2.tsv')
@@ -53,7 +53,7 @@ class TestTSVLengthFormat(TestPluginBase):
             test_format = TSVLengthFormat(filepath, mode='r')
             test_format.validate()
 
-    def test_tsvlength_format_negint_invalid(self):
+    def test_tsv_length_format_negint_invalid(self):
         expected_msg = "Lengths must be non-negative integers."
         filepath = self.get_data_path('feature_lengths_malformed_3.tsv')
 
@@ -62,10 +62,10 @@ class TestTSVLengthFormat(TestPluginBase):
             test_format.validate()
 
 
-class TestTSVLengthHelpers(TestPluginBase):
+class TestTSVLengthTransformers(TestPluginBase):
     package = f'{__package_name__}.tests'
 
-    def test_tsvlength_fp_to_dataframe(self):
+    def test_length_fp_to_df(self):
         expected_df = pandas.DataFrame(
             index=["G000005825", "G000006175", "G000006605", "G000006725",
                    "G000006745", "G000006785", "G000006845", "G000006865",
@@ -75,10 +75,10 @@ class TestTSVLengthHelpers(TestPluginBase):
                 2153922, 2365589, 4828840, 6691734, 2154946, 2992245]})
         expected_df.index.name = FEATURE_NAME_KEY
         test_fp = self.get_data_path('feature_length/lengths.tsv')
-        out_df = tsvlength_fp_to_dataframe(test_fp)
+        out_df = length_fp_to_df(test_fp)
         assert_frame_equal(expected_df, out_df)
 
-    def test_dataframe_to_tsvlength_format(self):
+    def test_df_to_tsv_length_format(self):
         input_df = pandas.DataFrame(
             index=["G000005825", "G000006175", "G000006605", "G000006725",
                    "G000006745", "G000006785", "G000006845", "G000006865",
@@ -89,7 +89,7 @@ class TestTSVLengthHelpers(TestPluginBase):
         input_df.index.name = FEATURE_NAME_KEY
 
         # ensure the new format is filled with the expected contents
-        test_format = dataframe_to_tsvlength_format(input_df)
+        test_format = df_to_tsv_length_format(input_df)
 
         expected_contents_fp = self.get_data_path(
             'feature_length/lengths.tsv')
@@ -101,7 +101,7 @@ class TestTSVLengthHelpers(TestPluginBase):
 
         self.assertEqual(expected_contents.strip(), out_contents.strip())
 
-    def test_dataframe_to_tsvlength_format_fail(self):
+    def test_df_to_tsv_length_format_err(self):
         input_df = pandas.DataFrame(
             index=["G000005825", "G000006175", "G000006605", "G000006725",
                    "G000006745", "G000006785", "G000006845", "G000006865",
@@ -113,6 +113,6 @@ class TestTSVLengthHelpers(TestPluginBase):
 
         with self.assertRaisesRegex(
                 ValidationError, "Lengths must be non-negative integers."):
-            dataframe_to_tsvlength_format(input_df)
+            df_to_tsv_length_format(input_df)
 
 # NB: No tests for TSVLengthDirectoryFormat because it's a single-file one

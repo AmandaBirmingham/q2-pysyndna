@@ -1,5 +1,5 @@
 import pandas
-from qiime2.plugin import SemanticType
+from qiime2.plugin import SemanticType, ValidationError
 import qiime2.plugin.model as model
 from q2_types.feature_data import FeatureData
 
@@ -27,21 +27,24 @@ class CoordsFormat(model.TextFileFormat):
     """
 
     def _validate_(self, level):
-        _ = coords_fp_to_dataframe(str(self.path))
+        _ = coords_fp_to_df(str(self.path))
 
 
 CoordsDirectoryFormat = model.SingleFileDirectoryFormat(
     'CoordsDirectoryFormat', 'coords.txt', CoordsFormat)
 
 
-def coords_fp_to_dataframe(fp: str) -> pandas.DataFrame:
-    df = read_ogu_orf_coords_to_df(fp)
+def coords_fp_to_df(fp: str) -> pandas.DataFrame:
+    try:
+        df = read_ogu_orf_coords_to_df(fp)
+    except Exception as e:
+        raise ValidationError(f"File {fp} is malformed or missing: {e}")
     checked_df = validate_and_cast_ogu_orf_coords_df(df)
     return checked_df
 
 
-def dataframe_to_coords_format(df):
+def df_to_coords_format(df):
     df = validate_and_cast_ogu_orf_coords_df(df)
     ff = CoordsFormat()
-    df.to_csv(str(ff), sep='\t', header=False, index=True)
+    df.to_csv(str(ff), sep='\t', header=False, index=False)
     return ff

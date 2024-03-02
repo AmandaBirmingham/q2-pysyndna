@@ -1,6 +1,4 @@
-import biom
 import pandas
-from typing import Dict, Union, List
 from qiime2.plugin import (Plugin, Int, Float, Range, Str, Choices,
                            Metadata, Citations)
 from q2_types.feature_table import (FeatureTable, Frequency)
@@ -10,29 +8,33 @@ from pysyndna import OGU_CELLS_PER_G_OF_GDNA_KEY, OGU_CELLS_PER_G_OF_SAMPLE_KEY
 import q2_pysyndna
 from q2_pysyndna._type_format_syndna_pool import (
     SyndnaPoolConcentrationTable,
-    SyndnaPoolCsvFormat, SyndnaPoolDirectoryFormat)
+    SyndnaPoolCsvFormat, SyndnaPoolDirectoryFormat,
+    syndna_pool_csv_format_to_df)
 from q2_pysyndna._type_format_linear_regressions import (
     LinearRegressionsObjects, LinearRegressions,
     LinearRegressionsYamlFormat, LinearRegressionsDirectoryFormat,
-    load_and_validate_linearregressionsyaml_fp,
-    fill_linearregressionsyamlformat)
+    yaml_fp_to_linear_regressions_yaml_format,
+    dict_to_linear_regressions_yaml_format,
+    linear_regressions_directory_format_to_linear_regressions_objects,
+    linear_regressions_objects_to_linear_regressions_directory_format)
 from q2_pysyndna._type_format_pysyndna_log import (
     PysyndnaLog,
     PysyndnaLogFormat, PysyndnaLogDirectoryFormat,
-    fill_pysyndnalogformat, load_list_from_pysyndnalog_fp,
-    extract_list_from_pysyndnalogdir_format)
+    list_to_pysyndna_log_format, log_fp_to_list,
+    pysyndna_log_directory_format_to_list)
 from q2_pysyndna._type_format_length import (
     Length,
     TSVLengthFormat, TSVLengthDirectoryFormat,
-    tsvlength_fp_to_dataframe,
-    dataframe_to_tsvlength_format)
+    length_fp_to_df,
+    df_to_tsv_length_format)
 from q2_pysyndna._type_format_coords import (
     Coords,
     CoordsFormat, CoordsDirectoryFormat,
-    coords_fp_to_dataframe,
-    dataframe_to_coords_format
+    coords_fp_to_df,
+    df_to_coords_format
 )
 
+# plugin instantiation
 plugin = Plugin(
     name=q2_pysyndna.__plugin_name__,
     version=q2_pysyndna.__version__,
@@ -44,6 +46,7 @@ plugin = Plugin(
     short_description=q2_pysyndna.__description__,
 )
 
+# Type and format registrations
 plugin.register_semantic_types(SyndnaPoolConcentrationTable)
 plugin.register_formats(SyndnaPoolCsvFormat, SyndnaPoolDirectoryFormat)
 plugin.register_semantic_type_to_format(
@@ -77,111 +80,75 @@ plugin.register_artifact_class(
                 "a set of features.")
 
 
+# Transformer registrations
 @plugin.register_transformer
-def _syndnapoolcsv_to_df(ff: SyndnaPoolCsvFormat) -> pandas.DataFrame:
-    result = pandas.read_csv(str(ff), header=0, comment='#')
-    return result
-
-
-@plugin.register_transformer
-def _typingdict_to_linearregyaml(
-        data: Dict[str, Union[Dict[str, float], None]]) -> \
-        LinearRegressionsYamlFormat:
-    ff = fill_linearregressionsyamlformat(data)
-    return ff
+def _syndna_pool_csv_format_to_df(ff: SyndnaPoolCsvFormat) -> pandas.DataFrame:
+    return syndna_pool_csv_format_to_df(ff)
 
 
 @plugin.register_transformer
-def _dict_to_linearregyaml(data: dict) -> LinearRegressionsYamlFormat:
-    ff = fill_linearregressionsyamlformat(data)
-    return ff
+def _pysyndna_log_format_to_list(data: PysyndnaLogFormat) -> list:
+    return log_fp_to_list(data.path)
 
 
 @plugin.register_transformer
-def _LinearRegressionsYamlFormat_to_dict(
+def _list_to_pysyndna_log_format(data: list) -> PysyndnaLogFormat:
+    return list_to_pysyndna_log_format(data)
+
+
+@plugin.register_transformer
+def _pysyndna_log_directory_format_to_list(
+        data: PysyndnaLogDirectoryFormat) -> list:
+    return pysyndna_log_directory_format_to_list(data)
+
+
+@plugin.register_transformer
+def _linear_regressions_yaml_format_to_dict(
         data: LinearRegressionsYamlFormat) -> dict:
-    return load_and_validate_linearregressionsyaml_fp(str(data))
+    return yaml_fp_to_linear_regressions_yaml_format(str(data))
+
+
+# @plugin.register_transformer
+# def _dict_to_linear_regressions_yaml_format(
+#         data: dict) -> LinearRegressionsYamlFormat:
+#     return dict_to_linear_regressions_yaml_format(data)
 
 
 @plugin.register_transformer
-def _list_to_pysyndnalog(data: list) -> PysyndnaLogFormat:
-    ff = fill_pysyndnalogformat(data)
-    return ff
-
-
-@plugin.register_transformer
-def _pysyndnalog_to_list(data: PysyndnaLogFormat) -> List[str]:
-    return load_list_from_pysyndnalog_fp(data)
-
-
-@plugin.register_transformer
-def _typinglist_to_pysyndnalog(data: List[str]) -> PysyndnaLogFormat:
-    ff = fill_pysyndnalogformat(data)
-    return ff
-
-
-@plugin.register_transformer
-def _pysyndnalogdir_to_list(data: PysyndnaLogDirectoryFormat) -> list:
-    return extract_list_from_pysyndnalogdir_format(data)
-
-
-@plugin.register_transformer
-def _linearregobjs_to_linearregsdir(data: LinearRegressionsObjects) -> \
-        LinearRegressionsDirectoryFormat:
-    fy = fill_linearregressionsyamlformat(data.linregs_dict)
-    fl = fill_pysyndnalogformat(data.log_msgs_list)
-
-    ff = LinearRegressionsDirectoryFormat()
-    ff.linregs_yaml.write_data(fy, LinearRegressionsYamlFormat)
-    ff.log.write_data(fl, PysyndnaLogFormat)
-    return ff
-
-
-@plugin.register_transformer
-def _format_tuple_to_linearregsdir(
-        data: (LinearRegressionsYamlFormat, PysyndnaLogFormat)) -> \
-        LinearRegressionsDirectoryFormat:
-    ff = LinearRegressionsDirectoryFormat()
-
-    fy = fill_linearregressionsyamlformat(data.linregs_dict)
-    fl = fill_pysyndnalogformat(data.log_msgs_list)
-    return ff
-
-
-@plugin.register_transformer
-def _linearregsdir_to_linearregobjs(
+def _linear_regressions_directory_format_to_linear_regressions_objects(
         data: LinearRegressionsDirectoryFormat) -> LinearRegressionsObjects:
-    linregs_dict = load_and_validate_linearregressionsyaml_fp(
-        data.linregs_yaml)
-    log_msgs_list = load_list_from_pysyndnalog_fp(data.log)
-    result = LinearRegressionsObjects(linregs_dict, log_msgs_list)
-    return result
+    return \
+        linear_regressions_directory_format_to_linear_regressions_objects(data)
 
 
 @plugin.register_transformer
-def _tsvlen_to_df(ff: TSVLengthFormat) -> pandas.DataFrame:
-    # validate the dataframe and convert lengths to integers
-    df = tsvlength_fp_to_dataframe(str(ff))
-    return df
+def _linear_regressions_objects_to_linear_regressions_directory_format(
+        data: LinearRegressionsObjects) -> LinearRegressionsDirectoryFormat:
+    return \
+        linear_regressions_objects_to_linear_regressions_directory_format(data)
 
 
 @plugin.register_transformer
-def _df_to_tsvlen(df: pandas.DataFrame) -> TSVLengthFormat:
-    return dataframe_to_tsvlength_format(df)
+def _tsv_length_format_to_df(ff: TSVLengthFormat) -> pandas.DataFrame:
+    return length_fp_to_df(str(ff))
+
+
+# @plugin.register_transformer
+# def _df_to_tsv_length_format(df: pandas.DataFrame) -> TSVLengthFormat:
+#     return df_to_tsv_length_format(df)
 
 
 @plugin.register_transformer
-def _coords_to_df(ff: CoordsFormat) -> pandas.DataFrame:
-    # validate the dataframe and convert coords to integers
-    df = coords_fp_to_dataframe(str(ff))
-    return df
+def _coords_format_to_df(ff: CoordsFormat) -> pandas.DataFrame:
+    return coords_fp_to_df(str(ff))
 
 
-@plugin.register_transformer
-def _df_to_coords(df: pandas.DataFrame) -> CoordsFormat:
-    return dataframe_to_coords_format(df)
+# @plugin.register_transformer
+# def _df_to_coords_format(df: pandas.DataFrame) -> CoordsFormat:
+#     return df_to_coords_format(df)
 
 
+# Method registrations
 plugin.methods.register_function(
     function=q2_pysyndna.fit,
     name='Fit linear regression models.',
@@ -273,6 +240,7 @@ plugin.methods.register_function(
                           'process.'}
 )
 
+# Visualizer registrations
 plugin.visualizers.register_function(
     function=q2_pysyndna.view_fit,
     name='Visualize linear regression results.',

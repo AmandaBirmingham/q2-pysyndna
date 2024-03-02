@@ -30,12 +30,12 @@ PysyndnaLogDirectoryFormat = model.SingleFileDirectoryFormat(
     'pysyndna.log', PysyndnaLogFormat)
 
 
-def load_list_from_pysyndnalog_fp(log_fp) -> List[str]:
+def log_fp_to_list(log_fp) -> List[str]:
     with open(log_fp, "r") as fh:
         return [line.strip() for line in fh]
 
 
-def fill_pysyndnalogformat(
+def list_to_pysyndna_log_format(
         data: List[str],
         ff: Optional[PysyndnaLogFormat] = None)\
         -> PysyndnaLogFormat:
@@ -47,7 +47,7 @@ def fill_pysyndnalogformat(
     return ff
 
 
-def extract_list_from_pysyndnalogdir_format(
+def pysyndna_log_directory_format_to_list(
         data: PysyndnaLogDirectoryFormat) -> list:
     curr_path = extract_fp_from_directory_format(data, data.file)
-    return load_list_from_pysyndnalog_fp(curr_path)
+    return log_fp_to_list(curr_path)
