@@ -15,6 +15,7 @@ from pysyndna.tests.test_util import Testers
 from q2_pysyndna import __package_name__, fit, count_cells, count_copies
 from q2_pysyndna._type_format_linear_regressions import \
     LinearRegressionsObjects
+from q2_pysyndna._type_format_length import LENGTH_KEY, FEATURE_NAME_KEY
 
 
 class TestFit(TestPluginBase):
@@ -72,7 +73,12 @@ class TestCountCells(TestPluginBase):
             counts_vals,
             TestCalcCellCountsData.ogu_lengths_dict[OGU_ID_KEY],
             params_dict[SAMPLE_ID_KEY])
+
         lengths_df = pd.DataFrame(TestCalcCellCountsData.ogu_lengths_dict)
+        lengths_df.set_index(OGU_ID_KEY, inplace=True)
+        lengths_df.index.name = FEATURE_NAME_KEY
+        lengths_df.columns = [LENGTH_KEY]
+
         # Note that, in the output, the ogu_ids are apparently sorted
         # alphabetically--different than the input order
         expected_out_biom = biom.table.Table(

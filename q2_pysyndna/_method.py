@@ -111,8 +111,8 @@ def count_cells(
 
     metadata_df = _make_pysydna_metadata(metadata)
 
-    ogu_lengths.index.name = OGU_ID_KEY
-    ogu_lengths.columns = [OGU_LEN_IN_BP_KEY]
+    ogu_lengths.reset_index(inplace=True)
+    ogu_lengths.columns = [OGU_ID_KEY, OGU_LEN_IN_BP_KEY]
 
     cell_counts_biom, log_msgs_list = calc_ogu_cell_counts_biom(
         metadata_df, regression_models.linregs_dict, ogu_counts,
