@@ -89,7 +89,7 @@ def _check_context(context: dict) -> dict:
 
 
 def _generate_template_fps(html_fnames: list) -> list:
-    if not INDEX_FNAME in html_fnames:
+    if INDEX_FNAME not in html_fnames:
         html_fnames.append(INDEX_FNAME)
     return list(map(
         lambda page: os.path.join(TEMPLATES, page), html_fnames))

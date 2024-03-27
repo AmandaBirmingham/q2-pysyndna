@@ -1,4 +1,3 @@
-
 __plugin_name__ = 'pysyndna'
 __package_name__ = 'q2_pysyndna'
 __description__ = 'Plugin to calculate absolute microbial cell counts'

@@ -22,3 +22,14 @@ from . import _version
 
 __name__ = 'q2-pysyndna'
 __version__ = _version.get_versions()['version']
+
+__all__ = [__plugin_name__, __package_name__, __description__,
+           __long_description__, __license__, __author__, __email__,
+           __url__, __citations_fname__, SyndnaPoolCsvFormat,
+           SyndnaPoolDirectoryFormat, SyndnaPoolConcentrationTable,
+           LinearRegressionsYamlFormat, LinearRegressionsDirectoryFormat,
+           LinearRegressions, PysyndnaLogFormat, PysyndnaLogDirectoryFormat,
+           PysyndnaLog, TSVLengthFormat, TSVLengthDirectoryFormat, Length,
+           CoordsFormat, CoordsDirectoryFormat, Coords, fit, count_cells,
+           count_copies, view_log, view_fit]
+

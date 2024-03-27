@@ -130,8 +130,8 @@ example3: null
 
     LINREGOBJ_1_2_3 = LinearRegressionsObjects(
         linregs_dict=TEST_DICT_1_2_3,
-        log_msgs_list=["The following syndnas were dropped because they had fewer "
-         "than 200 total reads aligned:['p166']"])
+        log_msgs_list=["The following syndnas were dropped because they had "
+                       "fewer than 200 total reads aligned:['p166']"])
 
     @staticmethod
     def compare_linear_regressions_directory_formats(
@@ -254,13 +254,10 @@ example3: null
             self):
         rel_fps = ['linear_regressions',
                    'linear_regressions_minimal']
-        abs_fps = [self.get_data_path(rel_fp)
-                     for rel_fp in rel_fps]
+        abs_fps = [self.get_data_path(rel_fp) for rel_fp in rel_fps]
 
         input_objs = [self.LINREGOBJ_1_2_3,
-            LinearRegressionsObjects(
-                self.TEST_DICT_1,
-                [])]
+                      LinearRegressionsObjects(self.TEST_DICT_1,[])]
 
         for i in range(len(abs_fps)):
             abs_fp = abs_fps[i]

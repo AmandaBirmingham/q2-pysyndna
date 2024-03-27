@@ -14,7 +14,6 @@ from q2_pysyndna._type_format_linear_regressions import (
     LinearRegressionsObjects, LinearRegressions,
     LinearRegressionsYamlFormat, LinearRegressionsDirectoryFormat,
     yaml_fp_to_linear_regressions_yaml_format,
-    dict_to_linear_regressions_yaml_format,
     linear_regressions_directory_format_to_linear_regressions_objects,
     linear_regressions_objects_to_linear_regressions_directory_format)
 from q2_pysyndna._type_format_pysyndna_log import (
@@ -25,14 +24,11 @@ from q2_pysyndna._type_format_pysyndna_log import (
 from q2_pysyndna._type_format_length import (
     Length,
     TSVLengthFormat, TSVLengthDirectoryFormat,
-    length_fp_to_df,
-    df_to_tsv_length_format)
+    length_fp_to_df)
 from q2_pysyndna._type_format_coords import (
     Coords,
     CoordsFormat, CoordsDirectoryFormat,
-    coords_fp_to_df,
-    df_to_coords_format
-)
+    coords_fp_to_df)
 
 # plugin instantiation
 plugin = Plugin(
@@ -108,12 +104,6 @@ def _linear_regressions_yaml_format_to_dict(
     return yaml_fp_to_linear_regressions_yaml_format(str(data))
 
 
-# @plugin.register_transformer
-# def _dict_to_linear_regressions_yaml_format(
-#         data: dict) -> LinearRegressionsYamlFormat:
-#     return dict_to_linear_regressions_yaml_format(data)
-
-
 @plugin.register_transformer
 def _linear_regressions_directory_format_to_linear_regressions_objects(
         data: LinearRegressionsDirectoryFormat) -> LinearRegressionsObjects:
@@ -133,19 +123,9 @@ def _tsv_length_format_to_df(ff: TSVLengthFormat) -> pandas.DataFrame:
     return length_fp_to_df(str(ff))
 
 
-# @plugin.register_transformer
-# def _df_to_tsv_length_format(df: pandas.DataFrame) -> TSVLengthFormat:
-#     return df_to_tsv_length_format(df)
-
-
 @plugin.register_transformer
 def _coords_format_to_df(ff: CoordsFormat) -> pandas.DataFrame:
     return coords_fp_to_df(str(ff))
-
-
-# @plugin.register_transformer
-# def _df_to_coords_format(df: pandas.DataFrame) -> CoordsFormat:
-#     return df_to_coords_format(df)
 
 
 # Method registrations
