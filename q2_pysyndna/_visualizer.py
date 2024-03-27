@@ -18,7 +18,9 @@ URL_KEY = 'url'
 TITLE_KEY = 'title'
 
 REF = importlib_resources.files(__package_name__) / 'assets'
-# NB: this method is not robust to files inside zips; see
+# replaces pkg_resources.resource_filename() idiom from older plugins,
+# since pkg_resources API is now deprecated.
+# NB: below method is not robust to files inside zips; see
 # https://importlib-resources.readthedocs.io/en/latest/migration.html#pkg-resources-resource-filename
 with importlib_resources.as_file(REF) as path:
     TEMPLATES = str(path)
@@ -29,8 +31,9 @@ def view_fit(output_dir: str,
     html_fnames = []
     context = _check_context({})
 
-    linear_reg_objs = linear_regressions_directory_format_to_linear_regressions_objects(
-        linear_regressions)
+    linear_reg_objs = \
+        linear_regressions_directory_format_to_linear_regressions_objects(
+            linear_regressions)
 
     linregs_yaml_str = yaml.dump(linear_reg_objs.linregs_dict)
     context['linregs_yaml'] = linregs_yaml_str

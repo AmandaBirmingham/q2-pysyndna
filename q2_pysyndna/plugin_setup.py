@@ -179,16 +179,16 @@ plugin.methods.register_function(
     function=q2_pysyndna.count_cells,
     name='Calculate cell counts.',
     description=(
-        'Calculate number of cells of each OGU per gram of sample using '
+        'Calculate number of cells of each genome per gram of sample using '
         'per-sample linear regression models based on synDNA spike-ins'),
     inputs={'regression_models': LinearRegressions,
-            'ogu_counts': FeatureTable[Frequency],
-            'ogu_lengths': FeatureData[Length]},
+            'genome_counts': FeatureTable[Frequency],
+            'genome_lengths': FeatureData[Length]},
     input_descriptions={
         'regression_models': 'Linear regression models trained for each '
                              'qualifying sample.',
-        'ogu_counts': 'Feature table of OGU counts.',
-        'ogu_lengths': 'Lengths of OGUs.'},
+        'genome_counts': 'Feature table of genome counts.',
+        'genome_lengths': 'Lengths of genomes.'},
     parameters={
         'metadata': Metadata,
         'read_length': Int % Range(1, None),
@@ -200,9 +200,9 @@ plugin.methods.register_function(
         'metadata': 'Metadata file with sample information.',
         'read_length': 'Length of reads in basepairs (usually but not '
                        'always 150).',
-        'min_percent_coverage': 'Minimum allowable percent coverage of an '
-                                'OGU in a sample needed to include that '
-                                'OGU/sample in the output.',
+        'min_percent_coverage': 'Minimum allowable percent coverage of a '
+                                'genome in a sample needed to include that '
+                                'genome/sample in the output.',
         'min_rsquared': 'Minimum allowable R^2 value for the linear regression'
                         ' model for a sample needed to include that sample in '
                         'the output.',
@@ -212,7 +212,7 @@ plugin.methods.register_function(
     outputs=[('cell_counts', FeatureTable[Frequency]),
              ('cell_count_log', PysyndnaLog)],
     output_descriptions={
-        'cell_counts': 'Cell counts per OGU per sample.',
+        'cell_counts': 'Cell counts per genome per g of sample.',
         'cell_count_log': 'Log messages from the cell count calculation '
                           'process.'}
 )
@@ -220,22 +220,22 @@ plugin.methods.register_function(
 
 plugin.methods.register_function(
     function=q2_pysyndna.count_copies,
-    name='Calculate copies of RNA of each OGU+ORF.',
+    name='Calculate copies of RNA of each genome+ORF.',
     description=(
-        'Calculate number of copies of RNA of each OGU+ORF '
-        '(each ORF on each OGU) per gram of sample.'),
-    inputs={'ogu_orf_counts': FeatureTable[Frequency],
-            'ogu_orf_coords': FeatureData[Coords]},
+        'Calculate number of copies of RNA of each genome+ORF '
+        '(each ORF on each genome) per gram of sample.'),
+    inputs={'genome_orf_counts': FeatureTable[Frequency],
+            'genome_orf_coords': FeatureData[Coords]},
     input_descriptions={
-        'ogu_orf_counts': 'Feature table of OGU+ORF counts.',
-        'ogu_orf_coords': 'Start and end coordinates of OGU+ORFs.'},
+        'genome_orf_counts': 'Feature table of genome+ORF counts.',
+        'genome_orf_coords': 'Start and end coordinates of genome+ORFs.'},
     parameters={'metadata': Metadata},
     parameter_descriptions={
         'metadata': 'Metadata file with sample information.'},
     outputs=[('copy_counts', FeatureTable[Frequency]),
              ('copy_count_log', PysyndnaLog)],
     output_descriptions={
-        'copy_counts': 'RNA copy counts per OGU+ORF per sample.',
+        'copy_counts': 'RNA copy counts per g of genome+ORF per sample.',
         'copy_count_log': 'Log messages from the copy count calculation '
                           'process.'}
 )

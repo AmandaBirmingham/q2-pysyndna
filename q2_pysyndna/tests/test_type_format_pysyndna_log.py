@@ -88,7 +88,7 @@ class TestPysyndnaLogTransformers(TestPluginBase):
         with test_format.open() as fh:
             self.assertEqual(fh.read(), expected_contents)
 
-    def test_pysyndna_log_format_w_format_input(self):
+    def test_list_to_pysyndna_log_format_w_format_input(self):
         test_format = PysyndnaLogFormat()
         test_logs = ["log msg 1", "log msg 2"]
         expected_contents = 'log msg 1\nlog msg 2'

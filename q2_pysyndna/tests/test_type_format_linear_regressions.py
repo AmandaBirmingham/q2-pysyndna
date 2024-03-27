@@ -128,6 +128,25 @@ example3: null
 
     YAML_1_2_3 = f"{YAML_1}\n{YAML_2_3}"
 
+    LINREGOBJ_1_2_3 = LinearRegressionsObjects(
+        linregs_dict=TEST_DICT_1_2_3,
+        log_msgs_list=["The following syndnas were dropped because they had fewer "
+         "than 200 total reads aligned:['p166']"])
+
+    @staticmethod
+    def compare_linear_regressions_directory_formats(
+            expected_format, out_format):
+        for attr in ['linregs_yaml', 'log']:
+            expected_fp = extract_fp_from_directory_format(
+                expected_format, getattr(expected_format, attr))
+            out_fp = extract_fp_from_directory_format(
+                out_format, getattr(out_format, attr))
+            with open(expected_fp) as fh:
+                expected_text = fh.read().strip()
+            with open(out_fp) as fi:
+                out_text = fi.read().strip()
+            yield expected_text, out_text.replace('"', "")
+
     def test_yaml_fp_to_linear_regressions_yaml_format_valid(self):
         rel_fps = ['linear_regressions/linear_regressions.yaml',
                    'linear_regressions_minimal/linear_regressions.yaml']
@@ -238,11 +257,7 @@ example3: null
         abs_fps = [self.get_data_path(rel_fp)
                      for rel_fp in rel_fps]
 
-        input_objs = [
-            LinearRegressionsObjects(
-                self.TEST_DICT_1_2_3,
-                ["The following syndnas were dropped because they had fewer "
-                 "than 200 total reads aligned:['p166']"]),
+        input_objs = [self.LINREGOBJ_1_2_3,
             LinearRegressionsObjects(
                 self.TEST_DICT_1,
                 [])]
@@ -254,13 +269,7 @@ example3: null
             expected_format = \
                 LinearRegressionsDirectoryFormat(abs_fp, mode='r')
 
-            for attr in ['linregs_yaml', 'log']:
-                expected_fp = extract_fp_from_directory_format(
-                    expected_format, getattr(expected_format, attr))
-                out_fp = extract_fp_from_directory_format(
-                    out_format, getattr(out_format, attr))
-                with open(expected_fp) as fh:
-                    expected_text = fh.read().strip()
-                with open(out_fp) as fi:
-                    out_text = fi.read().strip()
-                self.assertEqual(expected_text, out_text.replace('"', ""))
+            for exp_obs_pair in \
+                    self.compare_linear_regressions_directory_formats(
+                        expected_format, out_format):
+                self.assertEqual(exp_obs_pair[0], exp_obs_pair[1])

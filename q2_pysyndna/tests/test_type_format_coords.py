@@ -47,11 +47,12 @@ class TestTSVLengthFormat(TestPluginBase):
 class TestCoordsTransformers(TestPluginBase):
     package = f'{__package_name__}.tests'
 
+    TEST_DF = pandas.DataFrame(TestQuantOrfsData.COORDS_DICT)
+
     def test_coords_fp_to_df(self):
-        expected_df = pandas.DataFrame(TestQuantOrfsData.COORDS_DICT)
         test_fp = self.get_data_path('coords.txt')
         out_df = coords_fp_to_df(test_fp)
-        assert_frame_equal(expected_df, out_df)
+        assert_frame_equal(self.TEST_DF, out_df)
 
     def test_df_to_coords_format(self):
         input_df = pandas.DataFrame(TestQuantOrfsData.COORDS_DICT)

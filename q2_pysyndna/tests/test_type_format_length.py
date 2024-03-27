@@ -65,31 +65,23 @@ class TestTSVLengthFormat(TestPluginBase):
 class TestTSVLengthTransformers(TestPluginBase):
     package = f'{__package_name__}.tests'
 
+    TEST_DF = pandas.DataFrame(
+        index=["G000005825", "G000006175", "G000006605", "G000006725",
+               "G000006745", "G000006785", "G000006845", "G000006865",
+               "G000006925", "G000006965", "G000006985", "G000007005"],
+        data={LENGTH_KEY: [
+            4249288, 1936387, 2476842, 2731790, 4033484, 1852433,
+            2153922, 2365589, 4828840, 6691734, 2154946, 2992245]})
+    TEST_DF.index.name = FEATURE_NAME_KEY
+
     def test_length_fp_to_df(self):
-        expected_df = pandas.DataFrame(
-            index=["G000005825", "G000006175", "G000006605", "G000006725",
-                   "G000006745", "G000006785", "G000006845", "G000006865",
-                   "G000006925", "G000006965", "G000006985", "G000007005"],
-            data={LENGTH_KEY: [
-                4249288, 1936387, 2476842, 2731790, 4033484, 1852433,
-                2153922, 2365589, 4828840, 6691734, 2154946, 2992245]})
-        expected_df.index.name = FEATURE_NAME_KEY
         test_fp = self.get_data_path('feature_length/lengths.tsv')
         out_df = length_fp_to_df(test_fp)
-        assert_frame_equal(expected_df, out_df)
+        assert_frame_equal(self.TEST_DF, out_df)
 
     def test_df_to_tsv_length_format(self):
-        input_df = pandas.DataFrame(
-            index=["G000005825", "G000006175", "G000006605", "G000006725",
-                   "G000006745", "G000006785", "G000006845", "G000006865",
-                   "G000006925", "G000006965", "G000006985", "G000007005"],
-            data={LENGTH_KEY: [
-                4249288, 1936387, 2476842, 2731790, 4033484, 1852433,
-                2153922, 2365589, 4828840, 6691734, 2154946, 2992245]})
-        input_df.index.name = FEATURE_NAME_KEY
-
         # ensure the new format is filled with the expected contents
-        test_format = df_to_tsv_length_format(input_df)
+        test_format = df_to_tsv_length_format(self.TEST_DF)
 
         expected_contents_fp = self.get_data_path(
             'feature_length/lengths.tsv')
