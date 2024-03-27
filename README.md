@@ -345,7 +345,6 @@ log_visualization.visualization.save("cell_counts_log.qzv")
 3251	3395077	3395721
 ```
 
-#### TODO: Ask Qiyun where to find this
 3) Create a tab-separated per-sample metadata file including:
    1) A column named `sample_name` holding the per-sample identifier used in the count files.
    2) A column named `calc_mass_sample_aliquot_input_g` containing the mass, in grams, of the sample in the aliquot that went into the extraction.
